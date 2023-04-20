@@ -3,6 +3,7 @@ package com.myapp.demo.orderservice.service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import com.myapp.demo.orderservice.dto.InventoryResponse;
 import com.myapp.demo.orderservice.dto.OrderLineItemsDto;
@@ -25,9 +26,9 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
 
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
-    public void placeOrder(OrderRequest orderRequest) {
+    public String placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
 
@@ -40,8 +41,8 @@ public class OrderService {
                 .map(OrderLineItemsDto::getSkuCode).toList();
 
         // call to inventory service for stock check upon sku code
-        InventoryResponse[] inventoryResponses = webClient.get()
-                .uri("http://localhost:8082/api/inventory",
+        InventoryResponse[] inventoryResponses = webClientBuilder.build().get()
+                .uri("http://inventory-service/api/inventory",
                         uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
                         .retrieve()
                                 .bodyToMono(InventoryResponse[].class)
@@ -50,8 +51,10 @@ public class OrderService {
         boolean allProductInStock = Arrays.stream(inventoryResponses)
                 .allMatch(InventoryResponse::isHasStock);
 
-        if(allProductInStock)
+        if(allProductInStock) {
             orderRepository.save(order);
+            return "Order has been placed successfully";
+        }
         else
             throw new IllegalArgumentException("Product is not in stock, please try again later.");
 
