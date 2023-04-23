@@ -25,13 +25,14 @@ public class OrderController {
     
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @CircuitBreaker(name = "inventory", fallbackMethod = "placeOrderFallback")
-    @TimeLimiter(name = "inventory")
-    public CompletableFuture<String> placeOrder(@RequestBody OrderRequest orderRequest) {
-        return CompletableFuture.supplyAsync(() -> orderService.placeOrder(orderRequest));
+//    @CircuitBreaker(name = "inventory", fallbackMethod = "placeOrderFallback")
+//    @TimeLimiter(name = "inventory")
+    public String placeOrder(@RequestBody OrderRequest orderRequest) {
+        // return CompletableFuture.supplyAsync(() -> orderService.placeOrder(orderRequest));
+        return orderService.placeOrder(orderRequest);
     }
 
-    public CompletableFuture<String> placeOrderFallback(OrderRequest orderRequest, RuntimeException runtimeException) {
-        return CompletableFuture.supplyAsync(() -> "Oops, Something went wrong");
-    }
+//    public CompletableFuture<String> placeOrderFallback(OrderRequest orderRequest, RuntimeException runtimeException) {
+//        return CompletableFuture.supplyAsync(() -> "Oops, Something went wrong");
+//    }
 }
